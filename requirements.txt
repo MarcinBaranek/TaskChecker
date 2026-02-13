@@ -1,0 +1,4 @@
+dash~=3.3.0
+gunicorn~=23.0.0
+dash_bootstrap_components~=2.0.4
+dotenv~=0.9.9

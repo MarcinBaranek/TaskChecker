@@ -1,4 +1,6 @@
 # coding=utf-8
+from email.policy import default
+
 import dash
 import datetime
 from dash import html, Input, Output, State, ALL
@@ -7,6 +9,7 @@ from dash import dcc
 
 from app import app
 from tasks import Task
+from config import BACKGROUND_COLORS
 
 # ----------------------
 # MARK DONE
@@ -37,7 +40,6 @@ def mark_done(_, tasks):
     prevent_initial_call=True
 )
 def update_date(date_list, tasks):
-
     ctx = dash.callback_context
     if not ctx.triggered:
         return tasks
@@ -70,11 +72,13 @@ def parse_frequency(frequency: int) -> str:
     Input("task-store", "data")
 )
 def display_tasks(tasks):
+    tasks: list[Task] = [Task.from_dict(task) for task in tasks]
     grouped = defaultdict(list)
-    for task in sorted(tasks, key=lambda t: t["frequency"]):
-        grouped[task["frequency"]].append(task)
+    for task in sorted(tasks, key=lambda t: t.frequency):
+        grouped[task.frequency].append(task)
     sections = []
     for frequency, task_list in grouped.items():
+        task_list = sorted(task_list, key=lambda t: (t.last_done, t.name))
         sections.append(
             html.H2(f"{parse_frequency(frequency)} Tasks", style={"marginTop": "40px"})
         )
@@ -83,36 +87,35 @@ def display_tasks(tasks):
                 html.P("No tasks yet.", style={"color": "gray"})
             )
         for task in task_list:
-            if task["last_done"]:
-                last_done_date = datetime.date.fromisoformat(task["last_done"])
-                days_since = (datetime.date.today() - last_done_date).days
+            if task.last_done:
                 status_color = "#4CAF50"
-                status_text = f"{days_since} day(s) ago"
-                if days_since == 0:
+                status_text = f"{task.days_since_last_done} day(s) ago"
+                if task.days_since_last_done == 0:
                     status_color = "#636363"
-                if days_since > frequency:
+                if task.days_since_last_done > frequency:
                     status_color = "#bf0000"
             else:
-                days_since = None
                 status_color = "#e74c3c"
                 status_text = "Never completed"
             sections.append(
                 html.Div([
                     html.Div([
-                        html.H4(task["name"], style={"margin": "0"}),
+                        html.H4(task.name, style={"margin": "0"}),
                         html.Small(
-                            f"Last done: {task['last_done'] if task['last_done'] else '—'}"
+                            f"Last done: {task.last_done if task.last_done else '—'}"
                         ),
                     ]),
                     html.Div([
                         html.Span("Last done: "),
                         dcc.DatePickerSingle(
-                            id={"type": "date-picker", "index": task["task_id"]},
-                            date=task["last_done"],
+                            id={"type": "date-picker", "index": task.task_id},
+                            date=task.last_done,
                             display_format="YYYY-MM-DD",
                             placeholder="Select date"
                         )
-                    ]),
+                    ],
+                        style={"alignItems": "right"}
+                    ),
                     html.Div([
                         html.Span(
                             status_text,
@@ -124,7 +127,7 @@ def display_tasks(tasks):
                         ),
                         html.Button(
                             "✓ Done",
-                            id={"type": "done-btn", "index": task["task_id"]},
+                            id={"type": "done-btn", "index": task.task_id},
                             n_clicks=0,
                             style={
                                 # "backgroundColor": "#3498db",
@@ -138,7 +141,7 @@ def display_tasks(tasks):
                     ])
                 ],
                 style={
-                    "backgroundColor": "#3b3b3b",
+                    "backgroundColor": BACKGROUND_COLORS.get(task.room, "#3b3b3b"),
                     "padding": "15px 20px",
                     "borderRadius": "10px",
                     "boxShadow": "0 3px 8px rgba(0,0,0,0.05)",
@@ -148,5 +151,4 @@ def display_tasks(tasks):
                     "marginBottom": "10px",
                 })
             )
-
     return sections

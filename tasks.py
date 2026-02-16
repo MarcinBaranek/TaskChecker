@@ -24,6 +24,7 @@ class Task:
             f"{self.name}|{self.frequency}|{self.last_done.isoformat()}\n"
         with open(file_path, "w", encoding="utf-8") as f:
             f.writelines(lines)
+            f.flush()
 
     @classmethod
     def load(cls) -> list[Task]:
@@ -48,3 +49,7 @@ class Task:
             frequency=int(data["frequency"]),
             last_done=date.fromisoformat(data["last_done"])
         )
+
+    @property
+    def room(self) -> str:
+        return self.name.split("]")[0][1:]

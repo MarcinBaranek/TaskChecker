@@ -1,6 +1,4 @@
 # coding=utf-8
-from email.policy import default
-
 import dash
 import datetime
 from dash import html, Input, Output, State, ALL
@@ -25,6 +23,7 @@ def mark_done(_, tasks):
     ctx = dash.callback_context
     if not ctx.triggered:
         return tasks
+    tasks = [task.to_dict() for task in Task.load()]
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
     task_id = eval(button_id)["index"]
     for task in tasks:
@@ -43,16 +42,16 @@ def update_date(date_list, tasks):
     ctx = dash.callback_context
     if not ctx.triggered:
         return tasks
-
+    tasks = Task.load()
     triggered = ctx.triggered[0]
     task_id = eval(triggered["prop_id"].split(".")[0])["index"]
     new_date = triggered["value"]
 
     for task in tasks:
-        if task["task_id"] == task_id:
-            task["last_done"] = new_date
-            Task.from_dict(task).save()
-    return tasks
+        if task.task_id == task_id:
+            task.last_done = datetime.date.fromisoformat(new_date)
+            task.save()
+    return [t.to_dict() for t in tasks]
 
 # ----------------------
 # DISPLAY TASKS
@@ -72,7 +71,7 @@ def parse_frequency(frequency: int) -> str:
     Input("task-store", "data")
 )
 def display_tasks(tasks):
-    tasks: list[Task] = [Task.from_dict(task) for task in tasks]
+    tasks = Task.load()
     grouped = defaultdict(list)
     for task in sorted(tasks, key=lambda t: t.frequency):
         grouped[task.frequency].append(task)

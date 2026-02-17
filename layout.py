@@ -3,7 +3,7 @@ from tasks import Task
 
 
 # coding=utf-8
-layout =html.Div(
+layout = html.Div(
     style={
         "fontFamily": "Arial",
         # "backgroundColor": "#f4f6f9",

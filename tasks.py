@@ -31,7 +31,11 @@ class Task:
         file_path = os.getenv("TASKS_PATH")
         with open(file_path, encoding="utf-8") as f:
             lines = f.readlines()
-        return [cls(i, *line.strip().split("|")) for i, line in enumerate(lines)]
+        result = []
+        for i, line in enumerate(lines):
+            name, frequency, last_done = line.strip().split("|")
+            result.append(cls(i, name, int(frequency), date.fromisoformat(last_done)))
+        return result
 
     def to_dict(self):
         return {

@@ -24,9 +24,14 @@ def mark_done(_, tasks):
     if not ctx.triggered:
         return tasks
     tasks = [task.to_dict() for task in Task.load()]
-    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    task_id = eval(button_id)["index"]
-    for task in tasks:
+    for item in ctx.triggered:
+        if not item.get("value", 0):
+            continue
+        task_id = eval(item["prop_id"].split(".")[0])["index"]
+        break
+    else:
+        task_id = None
+    for i, task in enumerate(tasks):
         if task["task_id"] == task_id:
             task["last_done"] = datetime.date.today().isoformat()
             Task.from_dict(task).save()
@@ -89,7 +94,7 @@ def display_tasks(tasks):
             if task.last_done:
                 status_color = "#4CAF50"
                 status_text = f"{task.days_since_last_done} day(s) ago"
-                if task.days_since_last_done == 0:
+                if task.days_since_last_done == 1:
                     status_color = "#636363"
                 if task.days_since_last_done > frequency:
                     status_color = "#bf0000"

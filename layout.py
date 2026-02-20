@@ -10,9 +10,8 @@ layout = html.Div(
         "padding": "40px"
     },
     children=[
-
         html.H1("🗂 Task Tracker", style={"textAlign": "center"}),
-
+        # dcc.Dropdown(list(set([task.room for task in Task.load()])) + ['ALL'], 'ALL', multi=True),
         dcc.Store(id="task-store", data=[task.to_dict() for task in Task.load()]),
 
         html.Div(id="task-container")

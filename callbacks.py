@@ -3,7 +3,9 @@ import dash
 import datetime
 from dash import html, Input, Output, State, ALL
 from collections import defaultdict
-from dash import dcc
+from dash import dcc, ctx
+from dash.exceptions import PreventUpdate
+from styles import edit_modal_style
 
 from app import app
 from tasks import Task
@@ -71,11 +73,16 @@ def parse_frequency(frequency: int) -> str:
     else:
         return f"Evry {frequency} days"
 
+
 @app.callback(
     Output("task-container", "children"),
-    Input("task-store", "data")
+    Input("task-store", "data"),
+    Input("edit-task-id-store", "data"),
+    Input("hide-done-checkbox", "value"),
 )
-def display_tasks(tasks):
+def display_tasks(tasks, edit_modal, checkboxs):
+    if edit_modal is not None:
+        raise PreventUpdate
     tasks = Task.load()
     grouped = defaultdict(list)
     for task in sorted(tasks, key=lambda t: t.frequency):
@@ -83,6 +90,10 @@ def display_tasks(tasks):
     sections = []
     for frequency, task_list in grouped.items():
         task_list = sorted(task_list, key=lambda t: (t.last_done, t.name))
+        task_list = list(filter(lambda t: t.room in checkboxs, task_list))
+        task_list = list(filter(lambda t: not ('hide-done' in checkboxs and t.days_since_last_done <= 0.7 * frequency), task_list))
+        if not task_list:
+            continue
         sections.append(
             html.H2(f"{parse_frequency(frequency)} Tasks", style={"marginTop": "40px"})
         )
@@ -94,8 +105,10 @@ def display_tasks(tasks):
             if task.last_done:
                 status_color = "#4CAF50"
                 status_text = f"{task.days_since_last_done} day(s) ago"
-                if task.days_since_last_done == 1:
+                if task.days_since_last_done <= 1:
                     status_color = "#636363"
+                if task.days_since_last_done >= 0.7 * frequency:
+                    status_color = "#929423"
                 if task.days_since_last_done > frequency:
                     status_color = "#bf0000"
             else:
@@ -141,6 +154,18 @@ def display_tasks(tasks):
                                 "cursor": "pointer",
                                 "borderRadius": "5px"
                             }
+                        ),
+                        html.Button(
+                            "✏️ Edit",
+                            id={"type": "edit-btn", "index": task.task_id},
+                            n_clicks=0,
+                            style={
+                                "border": "none",
+                                "padding": "8px 15px",
+                                "cursor": "pointer",
+                                "borderRadius": "5px",
+                                "marginLeft": "8px"
+                            }
                         )
                     ])
                 ],
@@ -156,3 +181,58 @@ def display_tasks(tasks):
                 })
             )
     return sections
+
+
+@app.callback(
+    Output("edit-modal", "style"),
+    Output("edit-task-name", "value"),
+    Output("edit-task-frequency", "value"),
+    Output("edit-task-id-store", "data"),
+    Input({"type": "edit-btn", "index": ALL}, "n_clicks"),
+    Input("edit-cancel-btn", "n_clicks"),
+    prevent_initial_call=True
+)
+def open_edit_modal(edit_clicks, cancel_click):
+    modal_hidden = {"display": "none", **edit_modal_style}  # same style as above but display:none
+    modal_visible = {"display": "flex", **edit_modal_style} # same style as above but display:flex
+
+    triggered = ctx.triggered_id
+
+    # Close modal on cancel
+    if triggered == "edit-cancel-btn":
+        return modal_hidden, dash.no_update, dash.no_update, None
+
+    # Open modal when an edit button is clicked
+    if isinstance(triggered, dict) and triggered["type"] == "edit-btn":
+        if not any(edit_clicks):
+            raise PreventUpdate
+        task_id = triggered["index"]
+        tasks = Task.load()
+        task = next(t for t in tasks if t.task_id == task_id)
+        return modal_visible, task.name, task.frequency, task_id
+
+    raise PreventUpdate
+
+@app.callback(
+    Output("task-store", "data", allow_duplicate=True),
+    Output("edit-modal", "style", allow_duplicate=True),
+    Input("edit-save-btn", "n_clicks"),
+    State("edit-task-id-store", "data"),
+    State("edit-task-name", "value"),
+    State("edit-task-frequency", "value"),
+    prevent_initial_call=True
+)
+def save_edited_task(n_clicks, task_id, name, frequency):
+    if not n_clicks or not task_id:
+        raise PreventUpdate
+
+    tasks = Task.load()
+    for task in tasks:
+        if task.task_id == task_id:
+            task.name = name
+            task.frequency = frequency
+            task.save() # persist changes
+            break
+
+    modal_hidden = {"display": "none", **edit_modal_style}
+    return [task.to_dict() for task in Task.load()], modal_hidden  # trigger re-render

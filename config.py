@@ -3,6 +3,6 @@
 
 BACKGROUND_COLORS = {
     "Kitchen": "#404763",
-    "Bedroom": "#7373FF",
+    "Bedroom": "#343a66",
     "Bathroom": "#3b3b3b",
 }

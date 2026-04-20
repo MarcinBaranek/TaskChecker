@@ -16,7 +16,10 @@ layout = html.Div(
         dcc.Checklist(
             options=[
                 {'label': room, 'value': room} for room in rooms
-            ] + [{'label': 'Hide Done', 'value': 'hide-done'}],
+            ] + [
+                {'label': 'Hide Done', 'value': 'hide-done'},
+                {'label': 'Hide Daily', 'value': 'hide-daily'}
+            ],
             value=rooms + ['hide-done'],
             id='hide-done-checkbox',
             inline=True,

@@ -1,4 +1,6 @@
 # coding=utf-8
+from pyexpat import features
+
 import dash
 import datetime
 from dash import html, Input, Output, State, ALL
@@ -89,6 +91,8 @@ def display_tasks(tasks, edit_modal, checkboxs):
         grouped[task.frequency].append(task)
     sections = []
     for frequency, task_list in grouped.items():
+        if 'hide daily' in checkboxs and frequency == 1:
+            continue
         task_list = sorted(task_list, key=lambda t: (t.last_done, t.name))
         task_list = list(filter(lambda t: t.room in checkboxs, task_list))
         task_list = list(filter(lambda t: not ('hide-done' in checkboxs and t.days_since_last_done <= 0.7 * frequency), task_list))

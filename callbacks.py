@@ -91,7 +91,7 @@ def display_tasks(tasks, edit_modal, checkboxs):
         grouped[task.frequency].append(task)
     sections = []
     for frequency, task_list in grouped.items():
-        if 'hide daily' in checkboxs and frequency == 1:
+        if 'hide-daily' in checkboxs and frequency == 1:
             continue
         task_list = sorted(task_list, key=lambda t: (t.last_done, t.name))
         task_list = list(filter(lambda t: t.room in checkboxs, task_list))

@@ -122,7 +122,6 @@ def display_tasks(tasks, edit_modal, checkboxs):
                 status_text = "Never completed"
             date_picker = html.Div(
                 [
-                    # html.Span("Last done:"),
                     dcc.DatePickerSingle(
                         id={"type": "date-picker", "index": task.task_id},
                         date=task.last_done,
@@ -141,8 +140,6 @@ def display_tasks(tasks, edit_modal, checkboxs):
                     "padding": "clamp(1px, 1vw, 3px) clamp(1px, 1vw, 5px)",
                     "cursor": "pointer",
                     "borderRadius": "5px",
-                    # "margin": "clamp(3px, 1vw, 5px) clamp(3px, 1vw, 5px)",
-                    # "marginLeft": "8px"
                 }
             )
             done_button = html.Button(
@@ -150,20 +147,16 @@ def display_tasks(tasks, edit_modal, checkboxs):
                 id={"type": "done-btn", "index": task.task_id},
                 n_clicks=0,
                 style={
-                    # "backgroundColor": "#3498db",
-                    # "color": "white",
                     "border": "none",
                     "padding": "clamp(1px, 1vw, 3px) clamp(1px, 1vw, 5px)",
                     "cursor": "pointer",
                     "borderRadius": "5px",
-                    # "margin": "clamp(3px, 1vw, 5px) clamp(3px, 1vw, 5px)",
                 }
             )
             days_since_last_done = html.Span(
                 status_text,
                 style={
                     "color": status_color,
-                    # "backgroundColor": '#65666b',
                     "padding": "clamp(1px, 1vw, 3px) clamp(1px, 1vw, 5px)",
                     "margin": "clamp(3px, 1vw, 10px) clamp(3px, 1vw, 10px)",
                     "borderRadius": "5px",
@@ -177,7 +170,6 @@ def display_tasks(tasks, edit_modal, checkboxs):
                         html.H3(f"[{task.room}]"),
                         date_picker,
                         days_since_last_done,
-                        # edit_button
                     ], style={'display': 'flex', "justifyContent": "space-between",}),
                     html.Hr(style={
                         'border': 'none',

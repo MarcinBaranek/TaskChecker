@@ -3,6 +3,8 @@ from pyexpat import features
 
 import dash
 import datetime
+
+from click import style
 from dash import html, Input, Output, State, ALL
 from collections import defaultdict
 from dash import dcc, ctx
@@ -108,80 +110,95 @@ def display_tasks(tasks, edit_modal, checkboxs):
         for task in task_list:
             if task.last_done:
                 status_color = "#4CAF50"
-                status_text = f"{task.days_since_last_done} day(s) ago"
+                status_text = f"{task.days_since_last_done} days"
                 if task.days_since_last_done <= 1:
                     status_color = "#636363"
                 if task.days_since_last_done >= 0.7 * frequency:
                     status_color = "#929423"
                 if task.days_since_last_done > frequency:
-                    status_color = "#bf0000"
+                    status_color = "#a3250b"
             else:
                 status_color = "#e74c3c"
                 status_text = "Never completed"
+            date_picker = html.Div(
+                [
+                    # html.Span("Last done:"),
+                    dcc.DatePickerSingle(
+                        id={"type": "date-picker", "index": task.task_id},
+                        date=task.last_done,
+                        display_format="YYYY-MM-DD",
+                        placeholder="Select date"
+                    )
+                ],
+                style={"alignItems": "right", 'marginBottom': 'clamp(3px, 1vw, 10px)'},
+            )
+            edit_button = html.Button(
+                "✏️ Edit",
+                id={"type": "edit-btn", "index": task.task_id},
+                n_clicks=0,
+                style={
+                    "border": "none",
+                    "padding": "clamp(1px, 1vw, 3px) clamp(1px, 1vw, 5px)",
+                    "cursor": "pointer",
+                    "borderRadius": "5px",
+                    # "margin": "clamp(3px, 1vw, 5px) clamp(3px, 1vw, 5px)",
+                    # "marginLeft": "8px"
+                }
+            )
+            done_button = html.Button(
+                "✓ Done",
+                id={"type": "done-btn", "index": task.task_id},
+                n_clicks=0,
+                style={
+                    # "backgroundColor": "#3498db",
+                    # "color": "white",
+                    "border": "none",
+                    "padding": "clamp(1px, 1vw, 3px) clamp(1px, 1vw, 5px)",
+                    "cursor": "pointer",
+                    "borderRadius": "5px",
+                    # "margin": "clamp(3px, 1vw, 5px) clamp(3px, 1vw, 5px)",
+                }
+            )
+            days_since_last_done = html.Span(
+                status_text,
+                style={
+                    "color": status_color,
+                    # "backgroundColor": '#65666b',
+                    "padding": "clamp(1px, 1vw, 3px) clamp(1px, 1vw, 5px)",
+                    "margin": "clamp(3px, 1vw, 10px) clamp(3px, 1vw, 10px)",
+                    "borderRadius": "5px",
+                    "fontWeight": "bold",
+                    "fontSize": "medium",
+                }
+            )
             sections.append(
                 html.Div([
                     html.Div([
-                        html.H4(task.name, style={"margin": "0"}),
-                        html.Small(
-                            f"Last done: {task.last_done if task.last_done else '—'}"
-                        ),
-                    ]),
+                        html.H3(f"[{task.room}]"),
+                        date_picker,
+                        days_since_last_done,
+                        # edit_button
+                    ], style={'display': 'flex', "justifyContent": "space-between",}),
+                    html.Hr(style={
+                        'border': 'none',
+                        'borderTop': '2px solid #ccc',
+                        'margin': '0 0 clamp(3px, 1vw, 10px) 0',
+                    }),
                     html.Div([
-                        html.Span("Last done: "),
-                        dcc.DatePickerSingle(
-                            id={"type": "date-picker", "index": task.task_id},
-                            date=task.last_done,
-                            display_format="YYYY-MM-DD",
-                            placeholder="Select date"
-                        )
-                    ],
-                        style={"alignItems": "right"}
-                    ),
-                    html.Div([
-                        html.Span(
-                            status_text,
-                            style={
-                                "color": status_color,
-                                "marginRight": "15px",
-                                "fontWeight": "bold"
-                            }
-                        ),
-                        html.Button(
-                            "✓ Done",
-                            id={"type": "done-btn", "index": task.task_id},
-                            n_clicks=0,
-                            style={
-                                # "backgroundColor": "#3498db",
-                                # "color": "white",
-                                "border": "none",
-                                "padding": "8px 15px",
-                                "cursor": "pointer",
-                                "borderRadius": "5px"
-                            }
-                        ),
-                        html.Button(
-                            "✏️ Edit",
-                            id={"type": "edit-btn", "index": task.task_id},
-                            n_clicks=0,
-                            style={
-                                "border": "none",
-                                "padding": "8px 15px",
-                                "cursor": "pointer",
-                                "borderRadius": "5px",
-                                "marginLeft": "8px"
-                            }
-                        )
-                    ])
+                        html.H4(task.order, style={"margin": "0"}),
+                        done_button,
+                        edit_button
+                    ], style={'display': 'flex', "justifyContent": "space-between"})
                 ],
                 style={
                     "backgroundColor": BACKGROUND_COLORS.get(task.room, "#3b3b3b"),
-                    "padding": "15px 20px",
-                    "borderRadius": "10px",
+                    "padding": 'clamp(5px, 2vw, 20px)',
+                    "borderRadius": 'clamp(5px, 2vw, 20px)',
                     "boxShadow": "0 3px 8px rgba(0,0,0,0.05)",
-                    "display": "flex",
+                    "display": "block",
                     "justifyContent": "space-between",
                     "alignItems": "center",
-                    "marginBottom": "10px",
+                    "marginBottom": 'clamp(3px, 2vw, 10px)',
                 })
             )
     return sections

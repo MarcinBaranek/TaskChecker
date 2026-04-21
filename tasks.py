@@ -16,6 +16,10 @@ class Task:
     def days_since_last_done(self) -> int:
         return (date.today() - self.last_done).days
 
+    @property
+    def order(self) -> str:
+        return self.name.split(']')[1].strip()
+
     def save(self) -> None:
         file_path = os.getenv("TASKS_PATH")
         with open(file_path, encoding="utf-8") as f:

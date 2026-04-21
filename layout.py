@@ -25,8 +25,11 @@ layout = html.Div(
             inline=True,
             inputStyle={"width": "20px", "height": "20px",
                         "cursor": "pointer", "margin": "7px"},
-            labelStyle={"fontSize": "20px", "cursor": "pointer"},
-            style={'marginLeft': '20px', 'whiteSpace': 'nowrap'}
+            labelStyle={"fontSize": "20px", "cursor": "pointer",
+                        "width": "calc(50% - 20px)",
+                        "display": "inline-block"},
+            style={'marginLeft': '20px', 'whiteSpace': 'nowrap',
+                   'display': 'grid', 'gridTemplateColumns': '1fr 1fr'}
         ),
         dcc.Store(id="edit-task-id-store"),
         html.Div(
